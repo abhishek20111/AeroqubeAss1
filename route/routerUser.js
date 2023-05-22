@@ -45,7 +45,7 @@ router.post("/loginUser", async (req, res) => {
         return res.json({ error: "User Not found" });
     }
     if (await bcrypt.compare(password, user.password)) {
-        console.log(user);
+        //console.log(user);
         const token = jwt.sign({ email: user.email, role: user.role, name: user.name }, process.env.JWT_SECRET, {
             expiresIn: "24h",
         });
@@ -94,9 +94,9 @@ router.get('/getDataAll', async (req, res) => {
         const data = await User.find().select('name email role').sort("-createdAt")
 
         res.status(200).send(data);
-        console.log(data);
+        //console.log(data);
     } catch (err) {
-        console.error('Server error ' + err);
+       // console.error('Server error ' + err);
         res.status(500).send('Server error' + err);
     }
 });
@@ -111,9 +111,9 @@ router.post('/getData', async (req, res) => {
             .select("-password")
             .sort("-createdAt")
         res.status(200).send(data);
-        console.log(data);
+       // console.log(data);
     } catch (error) {
-        console.error(error);
+       // console.error(error);
         res.status(500).send("Server error");
     }
 });
@@ -144,7 +144,7 @@ router.put('/changeUserRole', async (req, res) => {
         await user.save();
         res.status(200).send(`User role updated successfully of ${user.name}`);
     } catch (err) {
-        console.error('Server error ' + err);
+       // console.error('Server error ' + err);
         res.status(500).send('Server error' + err);
     }
 });
@@ -157,7 +157,7 @@ router.post("/fill-form", async (req, res) => {
     try {
         const { a1, a2, a3, a4, a5, a6, b1, b2, b3, b4, b5, b6, c1, c2, c3, c4, d1, d2, d3, e1, e2, e3, e4, f1, f11, f2, f22, f3, f33, f4, f5, g1, g2, h1, h2 } = req.body.Collection[0]
 
-        console.log("request body " + req.body);
+        //console.log("request body " + req.body);
         const { email, role } = jwtDecode(req.headers.authorization.split(" ")[1]);
         const user = await User.findOneAndUpdate(
             { email, role },
@@ -204,10 +204,10 @@ router.post("/fill-form", async (req, res) => {
             },
             { new: true }
         ).select("name email status").populate("Collection", "Address City");
-        console.log("userData " + user);
+       // console.log("userData " + user);
         res.status(200).json({ status: "ok", message: "Form data saved successfully", data: user });
     } catch (error) {
-        console.log("error in fill form route is " + error);
+       // console.log("error in fill form route is " + error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
