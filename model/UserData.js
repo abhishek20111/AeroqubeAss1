@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-    },
+    }, 
     Collection:[{
         Address: String,
         Unit_No: String,
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
         property_Description: String,
         Builder_Type: {type:String, default:"Detached"},
         Age_of_Builder: Number,
-        Builder_Type: {type:String, default:"Multifamily home"},
+        Property_Type: {type:String, default:"Multifamily home"},
         Square_Footage: String,
         Parking_Type: String,
         Title: {type:String, default:"Condos"},
@@ -54,8 +54,9 @@ const userSchema = new mongoose.Schema({
         Latitude:Number,
         Longitude:Number,
         Image_url:[Object],
-        Message:String
-    }]
+        Message:String,
+        History:[{type:Object}]
+    }],
 
 },{timestamps: true})
 

@@ -4,9 +4,9 @@ const router = express.Router()
 const bodyParser = require("body-parser");
 const mongoose = require('mongoose')
 const User = mongoose.model('AssigR2')
+const Unit_User = mongoose.model('UnitChanger')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const userSchema = require('../model/UserData.js')
 const jwtDecode = require('jwt-decode')
 
 
@@ -16,6 +16,9 @@ router.use(bodyParser.json());
 
 router.post("/register", async (req, res) => {
     const { name, email, password, CurrentUserType } = req.body;
+    if(!name || !email || !password || !currentRole){
+        return res.send({error:"Fill Complete details"})
+    }
 
     const encryptedPassword = await bcrypt.hash(password, 10);
     try {
@@ -45,7 +48,7 @@ router.post("/loginUser", async (req, res) => {
         return res.json({ error: "User Not found" });
     }
     if (await bcrypt.compare(password, user.password)) {
-        //console.log(user);
+        console.log(user);
         const token = jwt.sign({ email: user.email, role: user.role, name: user.name }, process.env.JWT_SECRET, {
             expiresIn: "24h",
         });
@@ -56,23 +59,11 @@ router.post("/loginUser", async (req, res) => {
             return res.json({ error: "error" });
         }
     }
-    res.json({ status: "error", error: "InvAlid Password" });
+    res.json({ status: "error", error: "Invalid Authentication" });
 });
 
 
-//it is route for normal admin to check all user data , like name , email and id
-// router.get('/getDataUser', async (req, res) => {
-//     try {
-//         const data = await User.find({ role: 'User' })
-//             .select('name email')
 
-//         res.status(200).send(data);
-//         console.log(data);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send("Server error" + err);
-//     }
-// });
 
 
 
@@ -94,12 +85,338 @@ router.get('/getDataAll', async (req, res) => {
         const data = await User.find().select('name email role').sort("-createdAt")
 
         res.status(200).send(data);
-        //console.log(data);
+        console.log(data);
     } catch (err) {
-       // console.error('Server error ' + err);
+        console.error('Server error ' + err);
         res.status(500).send('Server error' + err);
     }
 });
+
+
+//save edited data 
+
+
+// router.post('/saveData', async (req, res) => {
+//     const { HeadEmail, userId, dataId, data, history } = req.body;
+//     console.log(HeadEmail + ' ' + userId + ' ' + dataId + ' ' );
+
+//     try {
+//       // Find the user by their userId
+//       const user = await User.findById(userId);
+//       if (!user) {
+//         return res.status(404).json({ error: 'User not found' });
+//       } 
+
+//       // Find the data by its dataId
+//       const dataIndex = user.Collection.findIndex(item => item._id.toString() === dataId);
+//     //   console.log(dataIndex);
+
+//       if (dataIndex === -1) {
+//         return res.status(404).json({ error: 'Data not found' });
+//       }
+
+//       // Update only the specified fields in the data object
+//       const existingData = user.Collection[dataIndex];
+//       const updatedData = { ...existingData, ...data };
+
+//       // Update the data in the user's Collection
+//       user.Collection[dataIndex] = updatedData;
+
+//       // Add the updated data to the user's History
+//       if (!user.History) {
+//         user.History = {};
+//       }
+
+//       // Check if the email ID exists in the user's history
+//       if (!user.History[HeadEmail]) {
+//         user.History[HeadEmail] = [];
+//       }
+
+//       // Append the new history data to the email's history array
+//       user.History[HeadEmail].push(...[history]);
+
+
+//       // Save the updated user
+//       await user.save();
+
+//       res.json({ success: true, History: user.History, data: updatedData });
+//     } catch (error) {
+//       console.error('Error saving data:', error);
+//       res.status(500).json({ error: 'Server error' });
+//     }
+//   });
+
+
+// router.post('/saveData', async (req, res) => {
+//     const { HeadEmail, userId, dataId, data, history } = req.body;
+//     console.log(HeadEmail + ' ' + userId + ' ' + dataId + ' ');
+
+//     try {
+//       // Find the user by their userId
+//       const user = await User.findById(userId);
+//       if (!user) {
+//         return res.status(404).json({ error: 'User not found' });
+//       }
+
+//       // Find the data by its dataId
+//       const dataIndex = user.Collection.findIndex(item => item._id.toString() === dataId);
+//       // console.log(dataIndex);
+
+//       if (dataIndex === -1) {
+//         return res.status(404).json({ error: 'Data not found' });
+//       }
+
+//       // Update the specific fields in the data object
+//       const existingData = user.Collection[dataIndex];
+//       Object.assign(existingData, data);
+
+//       // Add the updated data to the user's History
+//       if (!user.History) {
+//         user.History = {};
+//       }
+
+//       // Check if the email ID exists in the user's history
+//       if (!user.History[HeadEmail]) {
+//         user.History[HeadEmail] = [];
+//       }
+
+//       // Append the new history data to the email's history array
+//       user.History[HeadEmail].push(history);
+
+//       // Save the updated user
+//       await user.save();
+
+//       res.json({ success: true, History: user.History, data: existingData });
+//     } catch (error) {
+//       console.error('Error saving data:', error);
+//       res.status(500).json({ error: 'Server error' });
+//     }
+//   });
+
+
+
+router.post('/saveData', async (req, res) => {
+    const { HeadEmail, userId, dataId, data, history } = req.body;
+    console.log(HeadEmail + ' ' + userId + ' ' + dataId + ' ' + "Hitsory" + history);
+
+    try {
+        // Find the user by their userId
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Find the data by its dataId
+        const dataIndex = user.Collection.findIndex(item => item._id.toString() === dataId);
+        // console.log(dataIndex);
+
+        if (dataIndex === -1) {
+            return res.status(404).json({ error: 'Data not found' });
+        }
+
+        // Update the specific fields in the data object
+        const existingData = user.Collection[dataIndex];
+        Object.assign(existingData, data);
+
+        const time = new Date();
+    const timeString = time.toISOString();
+         
+        history.editor = HeadEmail;
+        history.time = timeString;
+
+        console.log("------------------------------------------------------------------------------------Actual History",JSON.stringify(history));
+
+        existingData.History.push(history);
+
+        // Save the updated user
+        await user.save();
+
+        res.json({ success: true, History: user.History, data: existingData });
+    } catch (error) {
+        console.error('Error saving data:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+//create unit for Unit Schema
+router.post("/createDocument", (req, res) => {
+    const id = req.body.id; // Assuming the ID is sent in the request body
+
+    const newDocument = new Unit_User({
+        docID: id,
+    });
+
+    newDocument
+        .save()
+        .then(() => {
+            console.log("Document created");
+            res.status(200).json({ message: "Document created successfully" });
+        })
+        .catch((error) => {
+            console.error("Error creating document:", error);
+            res.status(500).json({ error: "Error creating document" });
+        });
+});
+
+router.post("/replaceNames", async (req, res) => {
+    const { id, names } = req.body;
+    console.log(names);
+    try {
+      let checkup = await Unit_User.findOneAndUpdate({ docID: id }, { dropdown: names }, { new: true });
+  
+      if (checkup) {
+        res.status(200).json({ message: "Names replaced successfully", data: checkup });
+      } else {
+        // Document not found, create a new one
+        const newDocument = new Unit_User({ docID: id, dropdown: names });
+        checkup = await newDocument.save();
+        res.status(200).json({ message: "New document created", data: checkup });
+      }
+    } catch (error) {
+      console.error("Error replacing names:", error);
+      res.status(500).json({ message: "An error occurred while replacing names" });
+    }
+  });
+
+router.post("/replaceut", async (req, res) => {
+    const { id, ut } = req.body;
+
+    try {
+        // Update the document to replace the "dropdown" array with new values
+        await Unit_User.findOneAndUpdate({ docID: id }, { ut: ut });
+
+        res.status(200).json({ message: "Ut replaced successfully" });
+    } catch (error) {
+        console.error("Error replacing ut:", error);
+        res.status(500).json({ message: "An error occurred while replacing ut" });
+    }
+});
+
+router.post("/replaceproperty", async (req, res) => {
+    const { id, property } = req.body;
+
+    try {
+        // Update the document to replace the "dropdown" array with new values
+        await Unit_User.findOneAndUpdate({ docID: id }, { property: property });
+
+        res.status(200).json({ message: "property replaced successfully" });
+    } catch (error) {
+        console.error("Error replacing property:", error);
+        res
+            .status(500)
+            .json({ message: "An error occurred while replacing property" });
+    }
+});
+
+router.post("/replacebuilder", async (req, res) => {
+    const { id, builder } = req.body;
+
+    try {
+        await Unit_User.findOneAndUpdate({ docID: id }, { builder: builder });
+
+        res.status(200).json({ message: "builder replaced successfully" });
+    } catch (error) {
+        console.error("Error replacing builder:", error);
+        res
+            .status(500)
+            .json({ message: "An error occurred while replacing builder" });
+    }
+});
+
+router.post("/replacetitle", async (req, res) => {
+    const { id, title } = req.body;
+
+    try {
+        // Update the document to replace the "dropdown" array with new values
+        await Unit_User.findOneAndUpdate({ docID: id }, { title: title });
+
+        res.status(200).json({ message: "title replaced successfully" });
+    } catch (error) {
+        console.error("Error replacing title:", error);
+        res
+            .status(500)
+            .json({ message: "An error occurred while replacing title" });
+    }
+});
+
+router.post("/replaceunits", async (req, res) => {
+    const { id, unit } = req.body;
+    try {
+        // Update the document to replace the "unit" array with new values
+        await Unit_User.findOneAndUpdate({ docID: id }, { unit: unit });
+
+        res.status(200).json({ message: "Units replaced successfully in backend" });
+    } catch (error) {
+        console.error("Error replacing units:", error);
+        res
+            .status(500)
+            .json({ message: "An error occurred while replacing units" });
+    }
+});
+
+router.post("/replacestatus1", async (req, res) => {
+    const { id, status1 } = req.body;
+    try {
+        // Update the document to replace the "status1" array with new values
+        await Unit_User.findOneAndUpdate({ docID: id }, { status1: status1 });
+
+        res.status(200).json({ message: "Status1 replaced successfully" });
+    } catch (error) {
+        console.error("Error replacing Status1:", error);
+        res
+            .status(500)
+            .json({ message: "An error occurred while replacing Status1" });
+    }
+});
+
+router.post("/replacestatus2", async (req, res) => {
+    const { id, status2 } = req.body;
+    try {
+        // Update the document to replace the "status1" array with new values
+        await Unit_User.findOneAndUpdate({ docID: id }, { status2: status2 });
+
+        res.status(200).json({ message: "Status1 replaced successfully" });
+    } catch (error) {
+        console.error("Error replacing Status1:", error);
+        res
+            .status(500)
+            .json({ message: "An error occurred while replacing Status1" });
+    }
+});
+
+router.get("/fetchAllById/:docID", async (req, res) => {
+    const { docID } = req.params;
+    console.log(docID);
+
+    try {
+        // Find the document with the specified ID
+        const document = await Unit_User.findOne({ docID: docID });
+
+        if (!document) {
+            return res.status(404).json({ message: "Document not found" });
+        }
+
+        const all = document; // Retrieve the "dropdown" field from the document
+        console.log(all);
+        res.status(200).json(all);
+    } catch (error) {
+        console.error("Error fetching names:", error);
+        res.status(500).json({ message: "An error occurred while fetching names" });
+    }
+});
+
+
+
 
 
 // it is route which use to get data of any particular user
@@ -107,13 +424,13 @@ router.post('/getData', async (req, res) => {
     const { email } = req.body;
     try {
         const data = await User.findOne({ email }).
-            populate("Collection", "Address Unit_No City Zip_Code State property_Description Builder_Type Age_of_Builder Square_Footage Parking_Type Title Date status EndDate status Bedroom Bedrooms AddedFields Appliance_Include Utilies Utilies_Include ExttraAppliance_Include School SchoolDistance Market MarketDistance Community CommunityDistance Pets_alloed Rentals Latitude Longitude Image_url Message")
+            populate("Collection", "Address Unit_No City Zip_Code State property_Description Builder_Type Age_of_Builder Property_Type Square_Footage Parking_Type Title Date status EndDate status Bedroom Bedrooms AddedFields Appliance_Include Utilies Utilies_Include ExttraAppliance_Include School SchoolDistance Market MarketDistance Community CommunityDistance Pets_alloed Rentals Latitude Longitude Image_url Message")
             .select("-password")
             .sort("-createdAt")
         res.status(200).send(data);
-       // console.log(data);
+        console.log(data);
     } catch (error) {
-       // console.error(error);
+        console.error(error);
         res.status(500).send("Server error");
     }
 });
@@ -121,31 +438,32 @@ router.post('/getData', async (req, res) => {
 
 // this route can change the role from user to admin 
 router.put('/changeUserRole', async (req, res) => {
-    const { UserEmail } = req.body;
+    const { userEmail, role } = req.body;
     const token = req.headers.authorization?.split(' ')[1]; // Extract token from Authorization header
     if (!token) {
         return res.status(401).send('No token provided');
     }
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-        const { email, role } = decodedToken;
-        
-        if (role !== 'Super Admin') {
+        const { email, role: currentRole } = decodedToken;
+
+        if (currentRole !== 'Super Admin') {
             return res.status(403).send('Access denied. Only Super Admin can change user roles');
         }
-        
-        const user = await User.findOne({ email: UserEmail });
+
+        const user = await User.findOne({ email: userEmail });
         if (!user) {
             return res.status(404).send('User not found');
         }
 
         // Update the user's role
-        user.role = "Admin";
+        user.role = role;
         await user.save();
-        res.status(200).send(`User role updated successfully of ${user.name}`);
+
+        res.status(200).send(`Role updated for ${user.name}`);
     } catch (err) {
-       // console.error('Server error ' + err);
-        res.status(500).send('Server error' + err);
+        console.error('Server error:', err);
+        res.status(500).send('Server error: ' + err);
     }
 });
 
@@ -157,7 +475,7 @@ router.post("/fill-form", async (req, res) => {
     try {
         const { a1, a2, a3, a4, a5, a6, b1, b2, b3, b4, b5, b6, c1, c2, c3, c4, d1, d2, d3, e1, e2, e3, e4, f1, f11, f2, f22, f3, f33, f4, f5, g1, g2, h1, h2 } = req.body.Collection[0]
 
-        //console.log("request body " + req.body);
+        console.log("request body " + req.body);
         const { email, role } = jwtDecode(req.headers.authorization.split(" ")[1]);
         const user = await User.findOneAndUpdate(
             { email, role },
@@ -172,7 +490,7 @@ router.post("/fill-form", async (req, res) => {
                         property_Description: a6,
                         Builder_Type: b1,
                         Age_of_Builder: b2,
-                        Builder_Type: b3,
+                        Property_Type: b3,
                         Square_Footage: b4,
                         Parking_Type: b5,
                         Title: b6,
@@ -204,10 +522,10 @@ router.post("/fill-form", async (req, res) => {
             },
             { new: true }
         ).select("name email status").populate("Collection", "Address City");
-       // console.log("userData " + user);
-        res.status(200).json({ status: "ok", message: "Form data saved successfully", data: user });
+        console.log("userData " + user);
+        res.status(200).json({ status: "ok", message: "Data Saved Successfully", data: user });
     } catch (error) {
-       // console.log("error in fill form route is " + error);
+        console.log("error in fill form route is " + error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
