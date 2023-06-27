@@ -57,6 +57,7 @@ const userSchema = new mongoose.Schema({
         Message:String,
         History:[{type:Object}]
     }],
+    template:[{type:String}]
 
 },{timestamps: true})
 

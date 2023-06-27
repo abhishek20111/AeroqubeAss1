@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const mongoose = require('mongoose')
 const User = mongoose.model('AssigR2')
 const Unit_User = mongoose.model('UnitChanger')
+const Template = mongoose.model('template')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const jwtDecode = require('jwt-decode')
@@ -16,8 +17,8 @@ router.use(bodyParser.json());
 
 router.post("/register", async (req, res) => {
     const { name, email, password, CurrentUserType } = req.body;
-    if(!name || !email || !password || !currentRole){
-        return res.send({error:"Fill Complete details"})
+    if (!name || !email || !password || !currentRole) {
+        return res.send({ error: "Fill Complete details" })
     }
 
     const encryptedPassword = await bcrypt.hash(password, 10);
@@ -63,10 +64,6 @@ router.post("/loginUser", async (req, res) => {
 });
 
 
-
-
-
-
 // it is route for super admin it give all user name email id  and role so that super user can modify it 
 router.get('/getDataAll', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1]; // Extract token from Authorization header
@@ -85,7 +82,7 @@ router.get('/getDataAll', async (req, res) => {
         const data = await User.find().select('name email role').sort("-createdAt")
 
         res.status(200).send(data);
-        console.log(data);
+        // console.log(data);
     } catch (err) {
         console.error('Server error ' + err);
         res.status(500).send('Server error' + err);
@@ -197,7 +194,7 @@ router.get('/getDataAll', async (req, res) => {
 
 router.post('/saveData', async (req, res) => {
     const { HeadEmail, userId, dataId, data, history } = req.body;
-    console.log(HeadEmail + ' ' + userId + ' ' + dataId + ' ' + "Hitsory" + history);
+    // console.log(HeadEmail + ' ' + userId + ' ' + dataId + ' ' + "Hitsory" + history);
 
     try {
         // Find the user by their userId
@@ -219,12 +216,12 @@ router.post('/saveData', async (req, res) => {
         Object.assign(existingData, data);
 
         const time = new Date();
-    const timeString = time.toISOString();
-         
+        const timeString = time.toISOString();
+
         history.editor = HeadEmail;
         history.time = timeString;
 
-        console.log("------------------------------------------------------------------------------------Actual History",JSON.stringify(history));
+        // console.log("------------------------------------------------------------------------------------Actual History", JSON.stringify(history));
 
         existingData.History.push(history);
 
@@ -272,21 +269,21 @@ router.post("/replaceNames", async (req, res) => {
     const { id, names } = req.body;
     console.log(names);
     try {
-      let checkup = await Unit_User.findOneAndUpdate({ docID: id }, { dropdown: names }, { new: true });
-  
-      if (checkup) {
-        res.status(200).json({ message: "Names replaced successfully", data: checkup });
-      } else {
-        // Document not found, create a new one
-        const newDocument = new Unit_User({ docID: id, dropdown: names });
-        checkup = await newDocument.save();
-        res.status(200).json({ message: "New document created", data: checkup });
-      }
+        let checkup = await Unit_User.findOneAndUpdate({ docID: id }, { dropdown: names }, { new: true });
+
+        if (checkup) {
+            res.status(200).json({ message: "Names replaced successfully", data: checkup });
+        } else {
+            // Document not found, create a new one
+            const newDocument = new Unit_User({ docID: id, dropdown: names });
+            checkup = await newDocument.save();
+            res.status(200).json({ message: "New document created", data: checkup });
+        }
     } catch (error) {
-      console.error("Error replacing names:", error);
-      res.status(500).json({ message: "An error occurred while replacing names" });
+        console.error("Error replacing names:", error);
+        res.status(500).json({ message: "An error occurred while replacing names" });
     }
-  });
+});
 
 router.post("/replaceut", async (req, res) => {
     const { id, ut } = req.body;
@@ -468,8 +465,92 @@ router.put('/changeUserRole', async (req, res) => {
 });
 
 
+router.post('/createTemplate', async (req, res) => {
+    try {
+        const { name, forms, create_by } = req.body;
+
+        // Create a new template object
+        const template = new Template({
+            name,
+            forms,
+            create_by
+        }); 
+
+        // Save the template to the database
+        await template.save();
+        console.log(template);
+        res.status(201).json({ success: true, message: 'Template created successfully.' });
+    } catch (error) {
+        console.error("Error in createTemplate router - " + error);
+        res.status(500).json({ success: false, message: 'An error occurred while creating the template.' });
+    }
+});
 
 
+router.get('/getAllTemplates', async (req, res) => {
+    try {
+        // Fetch all templates from the database
+        console.log("getAllTemplates");
+        const templates = await Template.find();
+        res.status(200).json({ success: true, data: templates });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'An error occurred while fetching the templates.' });
+    }
+});
+
+router.post('/giveTemplate', async (req, res) => {
+    try {
+        const { email, templateId } = req.body;
+         // console.log("giveTemplate "+ email +" "+ templateId);
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        const template = await Template.findById(templateId);
+
+        if (!template) {
+            return res.status(404).json({ success: false, message: 'Template not found.' });
+        }
+
+        // Check if the email is already present in the template's user array
+        if (!template.user.includes(email)) {
+            // Add the email to the template's user array
+            template.user.push(email);
+            await template.save();
+        }
+        res.status(200).json({ success: true, message: 'Template assigned successfully.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'An error occurred while assigning the template.' });
+    }
+});
+
+
+router.get('/getUserProfile', async (req, res) => {
+    console.log("getUserProfile \n\n\n\n");
+    try {
+        const { email } = req.query;
+        console.log(email);
+        // Find the user by email in the User database
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        // Get the template details based on the IDs stored in the user's template array
+        const templateIds = user.template;
+        const templates = await Template.find({ _id: { $in: templateIds } });
+
+        res.status(200).json({ success: true, template_Info: templates });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'An error occurred while fetching the user profile.' });
+    }
+});
 
 router.post("/fill-form", async (req, res) => {
     try {
