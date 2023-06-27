@@ -49,7 +49,7 @@ router.post("/loginUser", async (req, res) => {
         return res.json({ error: "User Not found" });
     }
     if (await bcrypt.compare(password, user.password)) {
-        console.log(user);
+        //console.log(user);
         const token = jwt.sign({ email: user.email, role: user.role, name: user.name }, process.env.JWT_SECRET, {
             expiresIn: "24h",
         });
@@ -256,7 +256,7 @@ router.post("/createDocument", (req, res) => {
     newDocument
         .save()
         .then(() => {
-            console.log("Document created");
+            //console.log("Document created");
             res.status(200).json({ message: "Document created successfully" });
         })
         .catch((error) => {
@@ -267,7 +267,7 @@ router.post("/createDocument", (req, res) => {
 
 router.post("/replaceNames", async (req, res) => {
     const { id, names } = req.body;
-    console.log(names);
+    //console.log(names);
     try {
         let checkup = await Unit_User.findOneAndUpdate({ docID: id }, { dropdown: names }, { new: true });
 
@@ -393,7 +393,7 @@ router.post("/replacestatus2", async (req, res) => {
 
 router.get("/fetchAllById/:docID", async (req, res) => {
     const { docID } = req.params;
-    console.log(docID);
+    //console.log(docID);
 
     try {
         // Find the document with the specified ID
@@ -404,7 +404,7 @@ router.get("/fetchAllById/:docID", async (req, res) => {
         }
 
         const all = document; // Retrieve the "dropdown" field from the document
-        console.log(all);
+        //console.log(all);
         res.status(200).json(all);
     } catch (error) {
         console.error("Error fetching names:", error);
@@ -425,7 +425,7 @@ router.post('/getData', async (req, res) => {
             .select("-password")
             .sort("-createdAt")
         res.status(200).send(data);
-        console.log(data);
+        //console.log(data);
     } catch (error) {
         console.error(error);
         res.status(500).send("Server error");
@@ -490,7 +490,7 @@ router.post('/createTemplate', async (req, res) => {
 router.get('/getAllTemplates', async (req, res) => {
     try {
         // Fetch all templates from the database
-        console.log("getAllTemplates");
+        //console.log("getAllTemplates");
         const templates = await Template.find();
         res.status(200).json({ success: true, data: templates });
     } catch (error) {
@@ -530,10 +530,10 @@ router.post('/giveTemplate', async (req, res) => {
 
 
 router.get('/getUserProfile', async (req, res) => {
-    console.log("getUserProfile \n\n\n\n");
+    //console.log("getUserProfile \n\n\n\n");
     try {
         const { email } = req.query;
-        console.log(email);
+        //console.log(email);
         // Find the user by email in the User database
         const user = await User.findOne({ email });
 
@@ -556,7 +556,7 @@ router.post("/fill-form", async (req, res) => {
     try {
         const { a1, a2, a3, a4, a5, a6, b1, b2, b3, b4, b5, b6, c1, c2, c3, c4, d1, d2, d3, e1, e2, e3, e4, f1, f11, f2, f22, f3, f33, f4, f5, g1, g2, h1, h2 } = req.body.Collection[0]
 
-        console.log("request body " + req.body);
+        ////console.log("request body " + req.body);
         const { email, role } = jwtDecode(req.headers.authorization.split(" ")[1]);
         const user = await User.findOneAndUpdate(
             { email, role },
@@ -603,10 +603,10 @@ router.post("/fill-form", async (req, res) => {
             },
             { new: true }
         ).select("name email status").populate("Collection", "Address City");
-        console.log("userData " + user);
+        //console.log("userData " + user);
         res.status(200).json({ status: "ok", message: "Data Saved Successfully", data: user });
     } catch (error) {
-        console.log("error in fill form route is " + error);
+        //console.log("error in fill form route is " + error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
