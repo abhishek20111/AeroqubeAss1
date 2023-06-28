@@ -514,6 +514,8 @@ router.post('/giveTemplate', async (req, res) => {
         if (!template) {
             return res.status(404).json({ success: false, message: 'Template not found.' });
         }
+        user.template = templateId;
+        await user.save();
 
         // Check if the email is already present in the template's user array
         if (!template.user.includes(email)) {
