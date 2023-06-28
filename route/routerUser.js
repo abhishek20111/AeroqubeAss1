@@ -17,7 +17,7 @@ router.use(bodyParser.json());
 
 router.post("/register", async (req, res) => {
     const { name, email, password, CurrentUserType } = req.body;
-    if (!name || !email || !password || !currentRole) {
+    if (!name || !email || !password || !CurrentUserType) {
         return res.send({ error: "Fill Complete details" })
     }
 
