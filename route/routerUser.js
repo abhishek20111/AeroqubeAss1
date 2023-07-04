@@ -499,6 +499,67 @@ router.get('/getAllTemplates', async (req, res) => {
     }
 });
 
+router.put('/togglePrivate', async (req, res) => {
+    console.log("togglePrivate");
+    const { id } = req.body;
+  
+    try {
+      // Find the template by ID
+      const template = await Template.findById(id);
+  
+      if (!template) {
+        return res.status(404).json({ message: 'Template not found' });
+      }
+  
+      // Toggle the value of the private field
+      template.private = !template.private;
+  
+      // Save the updated template
+      await template.save();
+  
+      res.status(200).json({ message: `Successfully change to ${template.private}`, private: template.private });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+router.post('/removeUser', async (req, res) => {
+    
+    const { id, email } = req.body;
+
+    console.log("removeUser"+id+" "+email);
+
+    try {
+        // Find the template by ID
+        const template = await Template.findById(id);
+
+        if (!template) {
+            return res.status(404).json({ message: 'Template not found' });
+        }
+
+        // Find the index of the email in the user array
+        const emailIndex = template.user.indexOf(email);
+
+        if (emailIndex === -1) {
+            console.log(template);
+            return res.status(404).json({ message: 'User not found in the user list' });
+        }
+
+        // Remove the email from the user array
+        template.user.splice(emailIndex, 1);
+
+        // Save the updated template
+        await template.save();
+
+        res.status(200).json({ message: `Template is remove from ${email}`, template_Info: template });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+
 router.post('/giveTemplate', async (req, res) => {
     try {
         const { email, templateId } = req.body;
